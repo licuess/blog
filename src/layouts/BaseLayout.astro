@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import { SITE_TITLE, SITE_DESCRIPTION, ANNOUNCEMENT, SERVICES, GITHUB_URL, GITHUB_USER } from '../consts';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = SITE_DESCRIPTION } = Astro.props;
+const pageTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={`${base}/rss.xml`} />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="wrap">
+        <span>{ANNOUNCEMENT}</span>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="wrap header-row">
+        <a class="brand" href={`${base}/`}>
+          <span class="brand-logo">🛍️</span>{SITE_TITLE}
+        </a>
+        <form class="search" action={`${base}/blog/`} method="get" role="search">
+          <input type="search" name="q" placeholder="搜索文章、标签…" aria-label="搜索文章" />
+          <button type="submit">搜索</button>
+        </form>
+        <nav class="header-links">
+          <a href={`${base}/about/`}>关于店铺</a>
+          <a href={`${base}/rss.xml`}>🔔 订阅上新</a>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+      <nav class="catbar">
+        <div class="wrap catbar-row">
+          <a class="cat-all" href={`${base}/blog/`}>☰ 全部分类</a>
+          <a href={`${base}/`}>首页</a>
+          {tags.map((t) => <a href={`${base}/blog/?tag=${encodeURIComponent(t)}`}>{t}</a>)}
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap main">
+      <slot />
+    </main>
+
+    <section class="services">
+      <div class="wrap services-row">
+        {SERVICES.map((s) => (
+          <div class="service">
+            <span class="service-icon">{s.icon}</span>
+            <div><strong>{s.title}</strong><small>{s.desc}</small></div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div>
+          <h4>{SITE_TITLE}</h4>
+          <p>{SITE_DESCRIPTION}</p>
+        </div>
+        <div>
+          <h4>店铺导航</h4>
+          <a href={`${base}/`}>首页</a>
+          <a href={`${base}/blog/`}>全部文章</a>
+          <a href={`${base}/about/`}>关于店铺</a>
+        </div>
+        <div>
+          <h4>订阅服务</h4>
+          <a href={`${base}/rss.xml`}>RSS 订阅</a>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">GitHub @{GITHUB_USER}</a>
+        </div>
+      </div>
+      <p class="copyright">© {new Date().getFullYear()} {SITE_TITLE} · 使用 Astro 构建，部署于 GitHub Pages</p>
+    </footer>
+  </body>
+</html>

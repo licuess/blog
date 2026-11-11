@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+---
+
+<BaseLayout title="全部文章" description="全部文章列表，支持搜索与分类筛选">
+  <div class="crumbs"><a href={`${base}/`}>首页</a> › 全部文章</div>
+
+  <div class="listing">
+    <aside class="filter">
+      <h3>商品分类</h3>
+      <ul id="tag-list">
+        <li><a href={`${base}/blog/`} data-tag="">全部文章 <span>{posts.length}</span></a></li>
+        {tags.map((t) => (
+          <li>
+            <a href={`${base}/blog/?tag=${encodeURIComponent(t)}`} data-tag={t}>
+              {t} <span>{posts.filter((p) => p.data.tags.includes(t)).length}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+
+    <section class="results">
+      <div class="result-bar">
+        <span id="result-info">共 {posts.length} 件文章</span>
+      </div>
+      <div class="grid grid-list" id="post-grid">
+        {posts.map((p) => <PostCard post={p} />)}
+      </div>
+      <p class="empty" id="empty" hidden>😢 没有找到相关文章，换个关键词或分类试试吧。</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const q = (params.get('q') ?? '').trim().toLowerCase();
+  const tag = params.get('tag') ?? '';
+
+  const cards = document.querySelectorAll<HTMLElement>('#post-grid .card');
+  let shown = 0;
+  cards.forEach((card) => {
+    const matchQ = !q || (card.dataset.search ?? '').includes(q);
+    const matchTag = !tag || (card.dataset.tags ?? '').split(',').includes(tag);
+    const ok = matchQ && matchTag;
+    card.hidden = !ok;
+    if (ok) shown++;
+  });
+
+  const info = document.getElementById('result-info');
+  if (info) {
+    const parts: string[] = [];
+    if (tag) parts.push(`分类「${tag}」`);
+    if (q) parts.push(`关键词「${params.get('q')}」`);
+    info.textContent = `${parts.length ? parts.join(' + ') + '：' : ''}共 ${shown} 件文章`;
+  }
+  const empty = document.getElementById('empty');
+  if (empty) empty.hidden = shown > 0;
+
+  document.querySelectorAll<HTMLAnchorElement>('#tag-list a').forEach((a) => {
+    if ((a.dataset.tag ?? '') === tag) a.classList.add('active');
+  });
+  const input = document.querySelector<HTMLInputElement>('.search input');
+  if (input && q) input.value = params.get('q') ?? '';
+</script>

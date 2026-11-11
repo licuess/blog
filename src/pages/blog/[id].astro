@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { coverOf, formatDate } from '../../utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const { hue, emoji } = coverOf(post.id);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <div class="crumbs">
+    <a href={`${base}/`}>首页</a> › <a href={`${base}/blog/`}>全部文章</a> › {post.data.title}
+  </div>
+
+  <section class="detail">
+    <div class="detail-cover" style={`--h:${hue}`}>
+      <span class="card-emoji big">{emoji}</span>
+    </div>
+    <div class="detail-info">
+      <h1>{post.data.title}</h1>
+      <p class="detail-desc">{post.data.description}</p>
+      <div class="price-box">
+        <span class="label">价格</span>
+        <span class="price big"><em>¥</em>0<small>限时免费</small></span>
+      </div>
+      <dl class="specs">
+        <div><dt>上架时间</dt><dd><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time></dd></div>
+        <div>
+          <dt>商品分类</dt>
+          <dd>
+            {post.data.tags.length > 0
+              ? post.data.tags.map((t) => (
+                  <a class="chip" href={`${base}/blog/?tag=${encodeURIComponent(t)}`}>{t}</a>
+                ))
+              : '未分类'}
+          </dd>
+        </div>
+        <div><dt>服务保障</dt><dd>原创 · 免费 · 持续更新</dd></div>
+      </dl>
+      <div class="detail-actions">
+        <a class="btn-primary" href="#content">立即阅读</a>
+        <a class="btn-ghost" href={`${base}/rss.xml`}>🔔 订阅上新</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail-body" id="content">
+    <div class="tab-head"><span>文章详情</span></div>
+    <div class="prose">
+      <Content />
+    </div>
+  </section>
+
+  <p class="back"><a href={`${base}/blog/`}>← 继续逛逛其他文章</a></p>
+</BaseLayout>

@@ -1,0 +1,40 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { coverOf, formatDate } from '../utils';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  badge?: string;
+}
+
+const { post, badge } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const { hue, emoji } = coverOf(post.id);
+const search = `${post.data.title} ${post.data.description} ${post.data.tags.join(' ')}`.toLowerCase();
+---
+
+<a
+  class="card"
+  href={`${base}/blog/${post.id}/`}
+  data-search={search}
+  data-tags={post.data.tags.join(',')}
+>
+  <div class="card-cover" style={`--h:${hue}`}>
+    {badge && <span class="badge">{badge}</span>}
+    <span class="card-emoji">{emoji}</span>
+  </div>
+  <div class="card-body">
+    <h3>{post.data.title}</h3>
+    <p>{post.data.description}</p>
+    {post.data.tags.length > 0 && (
+      <div class="chips">
+        {post.data.tags.map((t) => <span class="chip">{t}</span>)}
+      </div>
+    )}
+    <div class="card-foot">
+      <span class="price"><em>¥</em>0<small>免费阅读</small></span>
+      <span class="btn-mini">立即阅读</span>
+    </div>
+    <div class="card-date">上架于 {formatDate(post.data.pubDate)}</div>
+  </div>
+</a>

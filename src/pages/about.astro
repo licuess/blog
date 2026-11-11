@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { AUTHOR, SITE_TITLE, GITHUB_URL } from '../consts';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout title="关于店铺" description="关于本站与博主 licuess">
+  <div class="crumbs"><a href={`${base}/`}>首页</a> › 关于店铺</div>
+  <section class="detail-body about">
+    <div class="tab-head"><span>店铺介绍</span></div>
+    <div class="prose">
+      <p>欢迎光临「{SITE_TITLE}」，我是店主 {AUTHOR}。这里的每一件「商品」都是一篇原创文章，全场免费，欢迎随意挑选。</p>
+      <p>想和我交流，可以到 <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">我的 GitHub 主页</a> 留言。</p>
+      <p>想修改店铺名称和公告，请编辑 <code>src/consts.ts</code>；想修改这个页面，请编辑 <code>src/pages/about.astro</code>。</p>
+    </div>
+  </section>
+</BaseLayout>
